@@ -28,3 +28,10 @@ class Cart:
 
   def remove_same(self, product):
     self.items = [item for item in self.items if item is not product]
+
+  def price_with_discount(self, percent):
+    return self.total_price() * (1 - percent / 100)
+
+  def price_with_tax(self, discount_percent, tax_percent):
+    discounted = self.price_with_discount(discount_percent)
+    return discounted * (1 + tax_percent / 100)
