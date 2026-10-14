@@ -2,10 +2,44 @@ from product import Product
 from sort import sort_items
 
 
+def read_float(prompt, minimum=None, maximum=None):
+  while True:
+    try:
+      value = float(input(prompt))
+    except ValueError:
+      print("Введите число")
+      continue
+    if minimum is not None and value < minimum:
+      print(f"Число должно быть не меньше {minimum}")
+      continue
+    if maximum is not None and value > maximum:
+      print(f"Число должно быть не больше {maximum}")
+      continue
+    return value
+
+def read_int(prompt, minimum, maximum):
+  while True:
+    try:
+      value = int(input(prompt))
+    except ValueError:
+      print("Введите целое число")
+      continue
+    if value < minimum or value > maximum:
+      print(f"Введите номер от {minimum} до {maximum}")
+      continue
+    return value
+
+def read_choice(prompt, choices):
+  while True:
+    choice = input(prompt)
+    if choice in choices:
+      return choice
+    print("Нет такого варианта")
+
 def add_product(shop):
   name = input("Введите название товара: ")
-  price = float(input("Введите цену товара: "))
-  weight = float(input("Введите вес товара: "))
+  price = read_float("Введите цену товара: ", minimum=0)
+  weight = read_float("Введите вес товара: ", minimum=0)
   category = input("Введите категорию товара: ")
   description = input("Введите описание товара: ")
   product = Product(name, category, price, weight, description)
@@ -15,10 +49,9 @@ def add_to_cart(shop, basket):
   shop.show()
   if len(shop.products) == 0:
     return
-  number = int(input("\nВведите номер товара: "))
-  if number < 1 or number > len(shop.products):
-    print("Нет товара с таким номером")
-    return
+  number = read_int(
+    "\nВведите номер товара: ", 1, len(shop.products)
+  )
   basket.add_from_catalog(shop, number - 1)
 
 def show_cart(basket):
@@ -33,10 +66,9 @@ def remove_from_cart(basket):
     print("Корзина пуста\n")
     return
   basket.show()
-  number = int(input("\nВведите номер товара в корзине: "))
-  if number < 1 or number > len(basket.items):
-    print("Нет товара с таким номером в корзине\n")
-    return
+  number = read_int(
+    "\nВведите номер товара в корзине: ", 1, len(basket.items)
+  )
   basket.remove_product(number - 1)
 
 def sort_cart(basket):
@@ -48,59 +80,48 @@ def sort_cart(basket):
   print("2. Вставки")
   print("3. Быстрая")
   print("4. Слияние")
-  choice = input("Алгоритм: ")
-  if choice == "1":
-    algorithm = "bubble"
-  elif choice == "2":
-    algorithm = "insertion"
-  elif choice == "3":
-    algorithm = "quick"
-  elif choice == "4":
-    algorithm = "merge"
-  else:
-    print("Нет такого алгоритма\n")
-    return
+  choice = read_choice("Алгоритм: ", {"1", "2", "3", "4"})
+  algorithms = {
+    "1": "bubble",
+    "2": "insertion",
+    "3": "quick",
+    "4": "merge",
+  }
+  algorithm = algorithms[choice]
 
   print("1. Цена")
   print("2. Вес")
   print("3. Категория")
-  choice = input("Поле: ")
-  if choice == "1":
-    field = "price"
-  elif choice == "2":
-    field = "weight"
-  elif choice == "3":
-    field = "category"
-  else:
-    print("Нет такого поля\n")
-    return
+  choice = read_choice("Поле: ", {"1", "2", "3"})
+  fields = {
+    "1": "price",
+    "2": "weight",
+    "3": "category",
+  }
+  field = fields[choice]
 
   print("1. По возрастанию")
   print("2. По убыванию")
-  choice = input("Порядок: ")
-  if choice == "1":
-    descending = False
-  elif choice == "2":
-    descending = True
-  else:
-    print("Нет такого порядка\n")
-    return
+  choice = read_choice("Порядок: ", {"1", "2"})
+  descending = choice == "2"
 
-  basket.items = sort_items(basket.items, algorithm, field, descending)
+  print("1. Показать шаги")
+  print("2. Без шагов")
+  choice = read_choice("Шаги: ", {"1", "2"})
+  show_steps = choice == "1"
+
+  basket.items = sort_items(basket.items, algorithm, field, descending, show_steps)
   basket.show()
 
 def edit_in_catalog(shop):
   shop.show()
   if len(shop.products) == 0:
     return
-  number = int(input("Номер товара: "))
-  if number < 1 or number > len(shop.products):
-    print("Нет товара с таким номером\n")
-    return
+  number = read_int("Номер товара: ", 1, len(shop.products))
   name = input("Название: ")
   category = input("Категория: ")
-  price = float(input("Цена: "))
-  weight = float(input("Вес: "))
+  price = read_float("Цена: ", minimum=0)
+  weight = read_float("Вес: ", minimum=0)
   description = input("Описание: ")
   shop.edit_product(
     number - 1,
@@ -111,10 +132,7 @@ def remove_from_catalog(shop, basket):
   shop.show()
   if len(shop.products) == 0:
     return
-  number = int(input("Номер товара: "))
-  if number < 1 or number > len(shop.products):
-    print("Нет товара с таким номером\n")
-    return
+  number = read_int("Номер товара: ", 1, len(shop.products))
   product = shop.products[number - 1]
   shop.remove_product(number - 1)
   basket.remove_same(product)
@@ -123,10 +141,9 @@ def show_discount(basket):
   if len(basket.items) == 0:
     print("Корзина пуста\n")
     return
-  percent = float(input("Введите процент скидки: "))
-  if percent < 0 or percent > 100:
-    print("Скидка должна быть от 0 до 100\n")
-    return
+  percent = read_float(
+    "Введите процент скидки: ", minimum=0, maximum=100
+  )
   print(f"Сумма: {basket.total_price()}")
   print(f"Сумма с учетом скидки: {basket.price_with_discount(percent)}\n")
 
@@ -134,11 +151,10 @@ def show_tax(basket):
   if len(basket.items) == 0:
     print("Корзина пуста\n")
     return
-  discount = float(input("Скидка в процентах: "))
-  tax = float(input("Налог в процентах: "))
-  if discount < 0 or discount > 100 or tax < 0:
-    print("Скидка от 0 до 100, налог от 0\n")
-    return
+  discount = read_float(
+    "Скидка в процентах: ", minimum=0, maximum=100
+  )
+  tax = read_float("Налог в процентах: ", minimum=0)
   print(f"Сумма: {basket.total_price()}")
   print(f"После скидки: {basket.price_with_discount(discount)}")
   print(f"С налогом: {basket.price_with_tax(discount, tax)}\n")
